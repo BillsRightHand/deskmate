@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0d11" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DeskMate" />
+    <title>DeskMate</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- 首頁：我的電腦／新增電腦／連線中 -->
+    <section id="home" class="screen">
+      <div class="home-wrap">
+        <header class="home-head">
+          <img src="icons/icon-192.png" class="home-icon" alt="" />
+          <div>
+            <h1>DeskMate</h1>
+            <p class="muted" id="home-sub">遠端控制你的電腦</p>
+          </div>
+        </header>
+
+        <div id="view-list" class="view">
+          <h2 class="section-title">我的電腦</h2>
+          <div id="computer-list" class="computer-list"></div>
+          <p id="list-empty" class="muted empty-text">還沒有配對任何電腦。在電腦上打開 DeskMate，用相機掃它的 QR，或按下面輸入 8 碼。</p>
+          <button id="add-btn" type="button" class="primary wide">＋ 新增電腦</button>
+        </div>
+
+        <form id="view-add" class="view" autocomplete="off" hidden>
+          <h2 class="section-title">新增電腦</h2>
+          <label for="pair-input" class="muted">輸入電腦上 DeskMate 視窗裡的 8 碼配對碼</label>
+          <input id="pair-input" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX" />
+          <p id="add-error" class="error" hidden></p>
+          <button type="submit" class="primary wide">配對並連線</button>
+          <button id="add-back" type="button" class="secondary wide">返回</button>
+          <p class="muted small" id="add-note">不用跟電腦在同一個 Wi-Fi，在哪裡輸入都可以。</p>
+        </form>
+
+        <div id="view-busy" class="view busy-view" hidden>
+          <div id="busy-spinner" class="spinner big"></div>
+          <h2 id="busy-title">連線中…</h2>
+          <p id="busy-text" class="muted"></p>
+          <button id="busy-retry" type="button" class="primary wide" hidden>重新連線</button>
+          <button id="busy-back" type="button" class="secondary wide" hidden>回到我的電腦</button>
+        </div>
+
+        <div id="install-hint" class="install-hint" hidden>
+          <b>想像 App 一樣用？</b>
+          點 Safari 下方的 <span class="share-icon" aria-hidden="true"></span>「分享」→「加入主畫面」。
+          <span class="muted">加好之後從主畫面打開，第一次按「新增電腦」輸入電腦上的 8 碼。</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 遠端畫面 -->
+    <section id="viewer" class="screen" hidden>
+      <div id="stage"><video id="video" playsinline autoplay muted disablepictureinpicture></video></div>
+      <div id="cursor-ring" hidden></div>
+      <div id="touch"></div>
+
+      <button id="chip" class="chip" type="button"><span class="dot"></span><span id="chip-text">連線中</span></button>
+
+      <div id="keys" class="keys" hidden></div>
+
+      <nav id="toolbar" class="toolbar">
+        <button id="tb-mode" type="button" class="tb" aria-label="切換操作方式">
+          <svg viewBox="0 0 24 24"><use href="#i-trackpad" /></svg><span id="tb-mode-label">觸控板</span>
+        </button>
+        <button id="tb-kbd" type="button" class="tb" aria-label="鍵盤">
+          <svg viewBox="0 0 24 24"><use href="#i-keyboard" /></svg><span>鍵盤</span>
+        </button>
+        <button id="tb-keys" type="button" class="tb" aria-label="特殊鍵">
+          <svg viewBox="0 0 24 24"><use href="#i-command" /></svg><span>特殊鍵</span>
+        </button>
+        <button id="tb-screens" type="button" class="tb" aria-label="選螢幕">
+          <svg viewBox="0 0 24 24"><use href="#i-monitor" /></svg><span>螢幕</span>
+        </button>
+        <button id="tb-more" type="button" class="tb" aria-label="更多">
+          <svg viewBox="0 0 24 24"><use href="#i-more" /></svg><span>更多</span>
+        </button>
+      </nav>
+
+      <div id="overlay" class="overlay" hidden>
+        <div class="overlay-card">
+          <div id="ov-spinner" class="spinner"></div>
+          <h2 id="ov-title"></h2>
+          <p id="ov-text" class="muted"></p>
+          <div class="ov-actions">
+            <button id="ov-retry" class="primary" hidden>重新連線</button>
+            <button id="ov-leave" class="secondary" hidden>回到我的電腦</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部面板 -->
+    <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+
+    <section id="sheet-screens" class="sheet" hidden>
+      <div class="grabber"></div>
+      <h3>要看哪個螢幕</h3>
+      <div id="screen-list" class="list"></div>
+    </section>
+
+    <section id="sheet-more" class="sheet" hidden>
+      <div class="grabber"></div>
+      <h3 id="more-title">更多</h3>
+
+      <div class="group">
+        <div class="group-label">畫質</div>
+        <div class="segmented" id="quality">
+          <button type="button" data-q="clear">清晰</button>
+          <button type="button" data-q="balanced">平衡</button>
+          <button type="button" data-q="saver">省流量</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-label">觸控板速度 <span id="speed-value" class="muted"></span></div>
+        <input id="speed" type="range" min="0.5" max="2.5" step="0.1" />
+      </div>
+
+      <label class="row-toggle"><span>捲動方向反過來</span><input id="invert-scroll" type="checkbox" /></label>
+
+      <div class="group">
+        <div class="group-label">剪貼簿</div>
+        <textarea id="clip-text" rows="3" placeholder="在這裡貼上或打字，按「放到電腦」"></textarea>
+        <div class="btn-row">
+          <button id="clip-get" type="button" class="secondary">拿電腦的剪貼簿</button>
+          <button id="clip-copy" type="button" class="secondary">複製到手機</button>
+          <button id="clip-set" type="button" class="primary">放到電腦</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="reset-zoom" type="button" class="secondary">畫面回原大小</button>
+        <button id="fullscreen" type="button" class="secondary" hidden>全螢幕</button>
+      </div>
+      <div class="btn-row">
+        <button id="disconnect" type="button" class="danger">中斷連線</button>
+        <button id="forget" type="button" class="secondary">忘記這台電腦</button>
+      </div>
+      <p class="muted small" id="help-text"></p>
+    </section>
+
+    <textarea id="kbd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="enter" aria-label="鍵盤輸入"></textarea>
+    <div id="toast" class="toast"></div>
+
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-trackpad" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.8" /><path d="M3.5 15h17M12 15v4.5" stroke="currentColor" stroke-width="1.8" /></symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V12m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.6-2.2L4.6 15.6a1.5 1.5 0 0 1 2.3-1.9L9 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></symbol>
+      <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8" /><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></symbol>
+      <symbol id="i-command" viewBox="0 0 24 24"><path d="M9 9V6.5A2.5 2.5 0 1 0 6.5 9H9Zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15Zm0 0v6m0 0h-6m6 0v2.5a2.5 2.5 0 1 0 2.5-2.5H15Zm-6 0v2.5A2.5 2.5 0 1 1 6.5 15H9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" /><path d="M9 20h6M12 16.5V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.7" fill="currentColor" /><circle cx="12" cy="12" r="1.7" fill="currentColor" /><circle cx="18" cy="12" r="1.7" fill="currentColor" /></symbol>
+    </svg>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
