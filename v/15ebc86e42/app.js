@@ -1232,6 +1232,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- 開始 ----------
+// 掃 QR 進來：已經配對過這台就直接連，沒配對過才用祕密配對
+function openPairing(pairing) {
+  const known = hosts.findComputer(computers, pairing.hostId);
+  connectTo(known && known.token ? { hostId: pairing.hostId } : pairing);
+}
+
 async function detectLan() {
   try {
     const res = await fetch('host.json', { cache: 'no-store' });
@@ -1258,10 +1264,15 @@ async function detectLan() {
     return;
   }
 
-  // 掃 QR 進來：已經配對過這台就直接連，沒配對過才用祕密配對
+  // 網頁已經開著時再掃 QR，Safari 只會換網址 # 後面那段、不會重新載入
+  window.addEventListener('hashchange', () => {
+    const p = hosts.parsePairHash(location.hash);
+    history.replaceState(null, '', location.pathname + location.search);
+    if (p && S.phase !== 'live') openPairing(p);
+  });
+
   if (pairing) {
-    const known = hosts.findComputer(computers, pairing.hostId);
-    connectTo(known && known.token ? { hostId: pairing.hostId } : pairing);
+    openPairing(pairing);
     return;
   }
   if (S.mode === 'lan') {

@@ -12,7 +12,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="icons/favicon.png" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="v/15ebc86e42/style.css" />
   </head>
   <body>
     <!-- 首頁：我的電腦／新增電腦／連線中 -->
@@ -162,6 +162,20 @@
       <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.7" fill="currentColor" /><circle cx="12" cy="12" r="1.7" fill="currentColor" /><circle cx="18" cy="12" r="1.7" fill="currentColor" /></symbol>
     </svg>
 
-    <script type="module" src="app.js"></script>
+    <script>
+      // ?debug：把錯誤和點擊印在畫面上（手機上沒有開發者工具時用）
+      if (location.search.indexOf('debug') >= 0) {
+        var box = document.createElement('pre');
+        box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;max-height:40%;overflow:auto;margin:0;padding:6px;font:11px monospace;background:rgba(0,0,0,.85);color:#7f7;z-index:99;pointer-events:none';
+        var log = function (s) { box.textContent = s + '\n' + box.textContent.slice(0, 3000); };
+        window.addEventListener('error', function (e) { log('ERR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno); });
+        window.addEventListener('unhandledrejection', function (e) { log('REJ ' + (e.reason && e.reason.message || e.reason)); });
+        ['pointerdown', 'click', 'touchstart'].forEach(function (t) {
+          document.addEventListener(t, function (e) { var el = e.target; log(t + ' → ' + (el.id || el.className || el.tagName)); }, true);
+        });
+        document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(box); log('debug on'); });
+      }
+    </script>
+    <script type="module" src="v/15ebc86e42/app.js"></script>
   </body>
 </html>
